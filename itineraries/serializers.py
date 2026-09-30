@@ -3,7 +3,7 @@ from rest_framework import serializers
 from destinations.models import Destination
 from destinations.serializers import DestinationListSerializer
 
-from .models import Collaboration, DailyPlan, Itinerary
+from .models import ActivityLog, Collaboration, DailyPlan, Itinerary
 
 
 class CollaborationSerializer(serializers.ModelSerializer):
@@ -114,3 +114,14 @@ class ItineraryCreateUpdateSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         # respond with the full detail shape so the client gets everything back
         return ItineraryDetailSerializer(instance, context=self.context).data
+
+
+class ActivityLogSerializer(serializers.ModelSerializer):
+    """Read-only view of an audit-trail entry."""
+
+    username = serializers.CharField(source='user.username', read_only=True)
+
+    class Meta:
+        model = ActivityLog
+        fields = ['id', 'username', 'itinerary', 'action', 'object_type', 'object_id', 'created_at']
+        read_only_fields = fields

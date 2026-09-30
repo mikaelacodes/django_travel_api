@@ -5,6 +5,7 @@ from django.db import models
 
 from destinations.models import Destination
 from itineraries.models import Itinerary
+from travel_api.validators import validate_image_size, validate_image_type
 
 
 class Accommodation(models.Model):
@@ -41,7 +42,12 @@ class Accommodation(models.Model):
     address = models.CharField(max_length=300)
     contact_email = models.EmailField()
     contact_phone = models.CharField(max_length=20)
-    image = models.ImageField(upload_to='accommodations/', null=True, blank=True)
+    image = models.ImageField(
+        upload_to='accommodations/',
+        null=True,
+        blank=True,
+        validators=[validate_image_size, validate_image_type],
+    )
     is_available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -87,7 +93,12 @@ class Activity(models.Model):
     )
     max_participants = models.PositiveIntegerField(null=True, blank=True)
     requirements = models.TextField(blank=True)
-    image = models.ImageField(upload_to='activities/', null=True, blank=True)
+    image = models.ImageField(
+        upload_to='activities/',
+        null=True,
+        blank=True,
+        validators=[validate_image_size, validate_image_type],
+    )
     is_available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -1,5 +1,5 @@
 from django.db.models import Count, Prefetch, Q
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import filters, generics, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -76,6 +76,18 @@ class DestinationSearchView(APIView):
         request.user.travel_preferences = prefs
         request.user.save(update_fields=['travel_preferences'])
         return Response({'saved_searches': saved})
+
+
+class DestinationsByCountryView(generics.ListAPIView):
+    """All active destinations in a given country (country comes from the URL)."""
+
+    serializer_class = DestinationListSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        # country is a <str:country> path bit - match it case-insensitively
+        country = self.kwargs['country']
+        return Destination.objects.filter(is_active=True, country__iexact=country)
 
 
 class DestinationViewSet(viewsets.ReadOnlyModelViewSet):

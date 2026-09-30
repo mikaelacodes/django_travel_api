@@ -164,3 +164,44 @@ class DailyPlan(models.Model):
 
     def __str__(self):
         return f"Day {self.day_number}: {self.title}"
+
+
+class ActivityLog(models.Model):
+    """
+    A simple audit trail - who did what, and when. object_type / object_id let
+    us point at any record without needing a hard FK to every single model.
+    Rows are written automatically by signals (see signals.py).
+    """
+
+    class ActionChoices(models.TextChoices):
+        CREATED = 'created', 'Created'
+        UPDATED = 'updated', 'Updated'
+        DELETED = 'deleted', 'Deleted'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='activity_logs',
+    )
+    # nullable: if the trip gets deleted we still want to keep the log entry
+    itinerary = models.ForeignKey(
+        Itinerary,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='activity_logs',
+    )
+    action = models.CharField(max_length=20, choices=ActionChoices.choices, help_text='What happened.')
+    object_type = models.CharField(max_length=50, help_text='Which model, e.g. "Itinerary".')
+    object_id = models.PositiveIntegerField(null=True, blank=True, help_text='PK of the affected row.')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Activity logs'
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user} {self.action} {self.object_type}#{self.object_id}"

@@ -1,6 +1,8 @@
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from travel_api.validators import validate_image_size, validate_image_type
+
 
 class Destination(models.Model):
     """
@@ -45,7 +47,12 @@ class Destination(models.Model):
         validators=[MinValueValidator(0)],
         help_text='Average cost per day in USD.',
     )
-    image = models.ImageField(upload_to='destinations/', null=True, blank=True)
+    image = models.ImageField(
+        upload_to='destinations/',
+        null=True,
+        blank=True,
+        validators=[validate_image_size, validate_image_type],
+    )
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     is_active = models.BooleanField(default=True)

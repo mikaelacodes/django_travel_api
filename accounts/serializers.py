@@ -72,3 +72,31 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Wrong username or password')
         data['user'] = user
         return data
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """Swap an old password for a new one - you have to prove you know the old first."""
+
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, validators=[validate_password])
+
+    def validate_old_password(self, value):
+        # the user is on the request, so we can check their current password here
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError('Your current password is wrong')
+        return value
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """Kicks off a reset by email. We don't say whether the email exists, on purpose."""
+
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """Finishes a reset - takes the uid + token from the email and the new password."""
+
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, validators=[validate_password])

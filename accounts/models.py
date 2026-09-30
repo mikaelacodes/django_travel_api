@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from travel_api.validators import validate_image_size, validate_image_type
+
 
 class User(AbstractUser):
     """
@@ -16,6 +18,7 @@ class User(AbstractUser):
         upload_to='profiles/',
         null=True,
         blank=True,
+        validators=[validate_image_size, validate_image_type],
         help_text='Optional profile picture.',
     )
     # keeping a JSON blob here so preferences can grow without new migrations

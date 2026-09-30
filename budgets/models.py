@@ -2,6 +2,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from itineraries.models import Itinerary
+from travel_api.validators import validate_image_size, validate_image_type
 
 
 class Budget(models.Model):
@@ -69,7 +70,12 @@ class Expense(models.Model):
         validators=[MinValueValidator(0)],
     )
     date = models.DateField()
-    receipt = models.ImageField(upload_to='receipts/', null=True, blank=True)
+    receipt = models.ImageField(
+        upload_to='receipts/',
+        null=True,
+        blank=True,
+        validators=[validate_image_size, validate_image_type],
+    )
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

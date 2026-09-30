@@ -10,9 +10,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from travel_api.pagination import StandardResultsPagination
 
 from .filters import ItineraryFilter
-from .models import Collaboration, Itinerary
+from .models import ActivityLog, Collaboration, Itinerary
 from .permissions import CanEditItinerary, IsTripOwner
 from .serializers import (
+    ActivityLogSerializer,
     ItineraryCreateUpdateSerializer,
     ItineraryDetailSerializer,
     ItineraryListSerializer,
@@ -187,6 +188,9 @@ class ItineraryViewSet(viewsets.ModelViewSet):
                 booked_total=Sum('bookings__price'),
             )
             .distinct()
+            # annotate + distinct drops the model's default ordering, so pin it
+            # back on or pagination warns about an unordered queryset
+            .order_by('-start_date')
         )
 
     def get_serializer_class(self):
@@ -245,3 +249,15 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         page = self.paginate_queryset(trips)
         serializer = ItineraryListSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
+
+
+class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only audit trail - each user only sees their own activity."""
+
+    serializer_class = ActivityLogSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['action', 'object_type', 'itinerary']
+    ordering_fields = ['created_at']
+
+    def get_queryset(self):
+        return ActivityLog.objects.filter(user=self.request.user).select_related('user', 'itinerary')
